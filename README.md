@@ -1,5 +1,8 @@
 # Quick Notes
 
+
+LIVE - https://quicknotes-production-a9e9.up.railway.app/
+
 A personal rich-text note-taking web application built with Spring Boot and Quill.js. Create, edit, and manage notes with a clean WYSIWYG editor — with auto-save and PDF export built in.
 
 ## Features
