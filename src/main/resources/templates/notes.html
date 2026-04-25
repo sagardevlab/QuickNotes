@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Notes - NoteHelper</title>
+    <link th:href="@{/css/style.css}" rel="stylesheet">
+</head>
+<body>
+
+<header class="header">
+    <div class="header-left">
+        <h1><a href="/" style="color:white;text-decoration:none;">NoteHelper</a></h1>
+    </div>
+    <div class="header-right">
+        <a href="/" class="btn btn-primary">+ New Note</a>
+    </div>
+</header>
+
+<main class="main">
+    <h2 class="page-title">My Notes</h2>
+
+    <div th:if="${#lists.isEmpty(notes)}" class="empty-state">
+        <p>No notes yet. <a href="/">Create your first note!</a></p>
+    </div>
+
+    <div class="notes-grid" th:unless="${#lists.isEmpty(notes)}">
+        <div class="note-card" th:each="note : ${notes}">
+            <div class="note-card-header">
+                <h3 class="note-card-title"
+                    th:text="${note.title != null && !note.title.isEmpty() ? note.title : 'Untitled'}">
+                    Untitled
+                </h3>
+                <div class="note-card-actions">
+                    <a th:href="@{/edit/{id}(id=${note.id})}" class="btn btn-sm btn-primary">Edit</a>
+                    <button class="btn btn-sm btn-danger"
+                            th:onclick="'deleteNote(' + ${note.id} + ')'">Delete</button>
+                </div>
+            </div>
+            <p class="note-card-date"
+               th:text="${#temporals.format(note.updatedAt, 'MMM dd, yyyy HH:mm')}">
+                Date
+            </p>
+        </div>
+    </div>
+</main>
+
+<script>
+    function deleteNote(id) {
+        if (!confirm('Delete this note? This cannot be undone.')) return;
+        fetch('/api/notes/' + id, { method: 'DELETE' })
+            .then(r => { if (r.ok) location.reload(); });
+    }
+</script>
+
+</body>
+</html>
