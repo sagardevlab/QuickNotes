@@ -88,20 +88,18 @@ public class NoteController {
         return ResponseEntity.noContent().build();
     }
 
-    @PostMapping("/api/notes/{id}/summarize-email")
+    @PostMapping("/api/notes/{id}/summarize")
     @ResponseBody
-    public ResponseEntity<Map<String, String>> summarizeAndEmail(
+    public ResponseEntity<Map<String, Object>> summarize(
             @PathVariable Long id,
             OAuth2AuthenticationToken auth) {
         try {
-            Note note      = noteService.findById(id, getUserId(auth));
-            String email   = auth.getPrincipal().getAttribute("email");
-            String name    = auth.getPrincipal().getAttribute("name");
-            summaryService.summarizeAndEmail(note.getTitle(), note.getContent(), id, email, name);
-            return ResponseEntity.ok(Map.of("message", "Summary sent to " + email));
+            Note note = noteService.findById(id, getUserId(auth));
+            List<String> bullets = summaryService.summarize(note.getContent());
+            return ResponseEntity.ok(Map.of("title", note.getTitle() != null ? note.getTitle() : "Untitled", "bullets", bullets));
         } catch (Exception e) {
             return ResponseEntity.internalServerError()
-                    .body(Map.of("error", "Failed to send summary: " + e.getMessage()));
+                    .body(Map.of("error", "Failed to summarize: " + e.getMessage()));
         }
     }
 

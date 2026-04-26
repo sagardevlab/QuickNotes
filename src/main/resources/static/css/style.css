@@ -1356,6 +1356,99 @@ html, body { overflow-x: hidden; }
   flex-direction: column;
 }
 
+/* ─── Summary Side Panel ─────────────────────────── */
+.summary-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 300px;
+  background: rgba(14, 12, 30, 0.98);
+  border-left: 1px solid rgba(251, 191, 36, 0.18);
+  backdrop-filter: blur(18px);
+  z-index: 600;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  transform: translateX(100%);
+  transition: transform .28s cubic-bezier(.4,0,.2,1);
+  overflow: hidden;
+}
+.summary-panel.open { transform: translateX(0); }
+
+.summary-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px 14px;
+  border-bottom: 1px solid rgba(251,191,36,.12);
+  flex-shrink: 0;
+}
+.summary-panel-title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fbbf24;
+  letter-spacing: .3px;
+}
+.summary-close-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--t2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 6px;
+  transition: color .15s, background .15s;
+}
+.summary-close-btn:hover { color: var(--t1); background: var(--s2); }
+
+.summary-note-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--t1);
+  padding: 16px 20px 10px;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--b1);
+}
+.summary-bullets {
+  list-style: none;
+  padding: 14px 20px;
+  margin: 0;
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.summary-bullets li {
+  font-size: 13.5px;
+  color: #e2d9f3;
+  line-height: 1.65;
+  padding-left: 18px;
+  position: relative;
+}
+.summary-bullets li::before {
+  content: '•';
+  position: absolute;
+  left: 0;
+  color: #fbbf24;
+  font-size: 16px;
+  line-height: 1.4;
+}
+.summary-hint {
+  font-size: 11px;
+  color: var(--t3);
+  padding: 10px 20px 18px;
+  flex-shrink: 0;
+  border-top: 1px solid var(--b1);
+  text-align: center;
+}
+
 /* ─── Watermark ──────────────────────────────────── */
 .watermark {
   position: fixed;
