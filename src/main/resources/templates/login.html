@@ -3,129 +3,139 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign in – NoteHelper</title>
+    <title>NoteHelper – SagarDevLab</title>
     <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
     <link th:href="@{/css/style.css}" rel="stylesheet">
 </head>
 <body>
 
-<!-- Animated aurora orbs -->
 <div class="login-orb login-orb-1" aria-hidden="true"></div>
 <div class="login-orb login-orb-2" aria-hidden="true"></div>
 <div class="login-orb login-orb-3" aria-hidden="true"></div>
 
-<div class="login-page">
+<!-- ══════════════════════════════════════════════
+     LANDING VIEW
+     ══════════════════════════════════════════════ -->
+<div id="landingView" class="landing-view">
 
-    <!-- ── Left: Guest notepad (visible ≥ 920 px) ── -->
-    <div class="login-left">
+    <!-- Top-left brand -->
+    <div class="landing-brand">
+        <div class="logo-icon">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+                <path d="M12 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V10L12 2Z"
+                      stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M12 2V10H20M8 14H16M8 18H13"
+                      stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </div>
+        <span class="logo-text">NoteHelper</span>
+    </div>
 
-        <!-- CTA banner -->
-        <div class="guest-cta">
-            <div class="guest-cta-msg">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="flex-shrink:0">
-                    <path d="M12 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V10L12 2Z"
-                          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M12 2V10H20M8 14H16M8 18H13"
-                          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- Hero -->
+    <div class="landing-hero">
+        <p class="landing-welcome">Welcome to</p>
+        <h1 class="landing-name">SagarDevLab</h1>
+        <p class="landing-sub">
+            Login to create multiple notes and save your progress for future
+        </p>
+
+        <div class="landing-actions">
+            <!-- Login -->
+            <a href="/oauth2/authorization/google" class="landing-btn landing-btn-primary">
+                <svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
                 </svg>
-                <span>Login or signup to save your progress and create multiple notes</span>
-            </div>
-            <a href="/oauth2/authorization/google" class="guest-cta-btn">Sign in free →</a>
+                Login
+            </a>
+            <!-- Guest -->
+            <button onclick="openGuestPad()" class="landing-btn landing-btn-ghost">
+                Continue without login
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                    <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button>
         </div>
 
-        <!-- Paper writing area -->
-        <div class="guest-paper">
-            <div class="guest-title-zone">
-                <input type="text"
-                       id="guestTitle"
-                       class="guest-title-input"
-                       placeholder="Give your note a title…"
-                       autocomplete="off"/>
-            </div>
-            <div class="guest-divider-line"></div>
-            <div id="guest-content">
-                <div id="guest-editor"></div>
+        <!-- Feature pills -->
+        <div class="landing-pills">
+            <span class="landing-pill">Rich text editor</span>
+            <span class="landing-pill">Auto-save</span>
+            <span class="landing-pill">Export to PDF</span>
+            <span class="landing-pill">Private notes</span>
+        </div>
+    </div>
+
+</div>
+
+
+<!-- ══════════════════════════════════════════════
+     GUEST NOTEPAD VIEW
+     ══════════════════════════════════════════════ -->
+<div id="guestView" class="guest-view" style="display:none">
+
+    <!-- Top bar -->
+    <div class="ep-topbar">
+        <div class="ep-left">
+            <button onclick="closeGuestPad()" class="ep-toggle-btn" title="Back">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <path d="M19 12H5M5 12l7 7M5 12l7-7"
+                          stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button>
+            <div class="logo">
+                <div class="logo-icon">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                        <path d="M12 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V10L12 2Z"
+                              stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M12 2V10H20M8 14H16M8 18H13"
+                              stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <span class="logo-text">NoteHelper</span>
             </div>
         </div>
-
-        <!-- Bottom bar -->
-        <div class="guest-bottom">
-            <span class="guest-mode-badge">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
-                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
-                    <path d="M12 8v4M12 16h.01" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
-                </svg>
-                Guest mode — notes are not saved
-            </span>
+        <div class="ep-right">
+            <span class="guest-mode-pill">Guest Mode</span>
             <button onclick="downloadGuestPDF()" class="btn btn-danger btn-sm">
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
                     <path d="M12 16L8 12M12 16L16 12M12 16V4M20 20H4"
                           stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
-                Download PDF
+                PDF
             </button>
+            <a href="/oauth2/authorization/google" class="btn btn-primary btn-sm">Login to save</a>
         </div>
-
     </div>
 
-    <!-- ── Right: Login form ── -->
-    <div class="login-right">
-
-        <div class="login-brand">
-            <div class="login-brand-icon">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                    <path d="M12 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V10L12 2Z"
-                          stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M12 2V10H20M8 14H16M8 18H13"
-                          stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-            </div>
-            <span class="login-brand-text">NoteHelper</span>
+    <!-- Paper -->
+    <div class="paper">
+        <div class="title-zone">
+            <input type="text"
+                   id="guestTitle"
+                   class="note-title-input"
+                   placeholder="Give your note a title…"
+                   autocomplete="off"/>
         </div>
-
-        <h1 class="login-heading">Welcome back</h1>
-        <p class="login-sub">
-            Sign in to access your personal notes.<br>
-            No account needed — just your Google profile.
-        </p>
-
-        <a href="/oauth2/authorization/google" class="google-btn">
-            <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
-                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-            </svg>
-            Continue with Google
-        </a>
-
-        <div class="login-divider">everything you need</div>
-
-        <div class="login-features">
-            <div class="login-feat">
-                <span class="feat-dot"></span>
-                Rich text editor — headings, lists, images, links
-            </div>
-            <div class="login-feat">
-                <span class="feat-dot"></span>
-                Auto-saves every 30 seconds while you write
-            </div>
-            <div class="login-feat">
-                <span class="feat-dot"></span>
-                Export any note as a paginated PDF
-            </div>
-            <div class="login-feat">
-                <span class="feat-dot"></span>
-                Your notes are private — only you can see them
-            </div>
+        <div class="title-rule">
+            <div class="title-rule-line"></div>
         </div>
-
-        <p class="login-footer">
-            By signing in you agree that this app stores your notes<br>
-            securely and links them to your Google account.
-        </p>
-
+        <div id="guest-content">
+            <div id="guest-editor"></div>
+        </div>
     </div>
+
+    <!-- Status bar -->
+    <div class="status-bar">
+        <span class="status-left">
+            <span class="status-dot"></span>
+            <span>Guest mode — notes are not saved</span>
+        </span>
+        <span class="status-hint">Login to save and access from anywhere</span>
+    </div>
+
 </div>
 
 <div class="watermark">made by <span>sagardevlab</span></div>
@@ -134,23 +144,40 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
-const guestQuill = new Quill('#guest-editor', {
-    theme: 'snow',
-    placeholder: 'Start writing here… (guest mode — not saved)',
-    modules: {
-        toolbar: {
-            container: [
-                [{ header: [1, 2, 3, false] }],
-                ['bold', 'italic', 'underline', 'strike'],
-                [{ list: 'ordered' }, { list: 'bullet' }],
-                [{ align: [] }],
-                ['image', 'link'],
-                ['clean']
-            ],
-            handlers: { image: guestImageHandler }
-        }
+let guestQuill = null;
+
+function openGuestPad() {
+    document.getElementById('landingView').style.display = 'none';
+    const gv = document.getElementById('guestView');
+    gv.style.display = 'flex';
+
+    if (!guestQuill) {
+        guestQuill = new Quill('#guest-editor', {
+            theme: 'snow',
+            placeholder: 'Start writing here… (guest mode — not saved)',
+            modules: {
+                toolbar: {
+                    container: [
+                        [{ header: [1, 2, 3, false] }],
+                        ['bold', 'italic', 'underline', 'strike'],
+                        [{ list: 'ordered' }, { list: 'bullet' }],
+                        [{ align: [] }],
+                        ['image', 'link'],
+                        ['clean']
+                    ],
+                    handlers: { image: guestImageHandler }
+                }
+            }
+        });
     }
-});
+
+    document.getElementById('guestTitle').focus();
+}
+
+function closeGuestPad() {
+    document.getElementById('guestView').style.display = 'none';
+    document.getElementById('landingView').style.display = 'flex';
+}
 
 function guestImageHandler() {
     const input = document.createElement('input');
@@ -172,11 +199,9 @@ function guestImageHandler() {
 
 async function downloadGuestPDF() {
     const { jsPDF } = window.jspdf;
-    const element = document.getElementById('guest-content');
+    const el = document.getElementById('guest-content');
 
-    const canvas = await html2canvas(element, {
-        scale: 2, useCORS: true, backgroundColor: '#ffffff'
-    });
+    const canvas = await html2canvas(el, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
 
     const pdf    = new jsPDF('p', 'mm', 'a4');
     const margin = 14;
