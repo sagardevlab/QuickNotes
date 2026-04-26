@@ -221,6 +221,7 @@
 let currentNoteId = null;
 let isSaving      = false;
 let isLoading     = false;
+let autoSaveTimer = null;
 
 // ── Quill ────────────────────────────────────────
 const quill = new Quill('#editor', {
@@ -273,14 +274,35 @@ async function loadNote(id) {
     }
 }
 
-// ── New blank note ───────────────────────────────
-function newNote() {
-    currentNoteId = null;
-    document.getElementById('noteTitle').value = '';
-    quill.setContents([{ insert: '\n' }]);
-    setActiveNote(null);
-    setStatus('New note — start writing', '');
-    document.getElementById('noteTitle').focus();
+// ── New blank note — auto-creates in DB immediately ──────────────────────────
+async function newNote() {
+    if (isSaving || isLoading) return;
+    isSaving = true;
+    setStatus('Creating…', 'saving');
+
+    try {
+        const res = await fetch('/api/notes', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title: 'Untitled', content: '' })
+        });
+        if (res.ok) {
+            const note = await res.json();
+            currentNoteId = note.id;
+            document.getElementById('noteTitle').value = '';
+            quill.setContents([{ insert: '\n' }]);
+            setStatus('New note — start writing', '');
+            await refreshPanel();
+            setActiveNote(currentNoteId);
+        } else {
+            setStatus('Error creating note', 'error');
+        }
+    } catch {
+        setStatus('Error', 'error');
+    } finally {
+        isSaving = false;
+        document.getElementById('noteTitle').focus();
+    }
 }
 
 // ── Highlight active item in panel ───────────────
@@ -291,7 +313,7 @@ function setActiveNote(id) {
 }
 
 // ── Save ─────────────────────────────────────────
-async function saveNote() {
+async function saveNote(silent = false) {
     if (isSaving || isLoading) return;
 
     const title   = document.getElementById('noteTitle').value.trim() || 'Untitled';
@@ -313,16 +335,16 @@ async function saveNote() {
             const saved = await res.json();
             if (!currentNoteId) currentNoteId = saved.id;
             setStatus('All changes saved', 'saved');
-            showToast('Note saved!');
+            if (!silent) showToast('Note saved!');
             await refreshPanel();
             setActiveNote(currentNoteId);
         } else {
             setStatus('Save failed', 'error');
-            showToast('Error saving note');
+            if (!silent) showToast('Error saving note');
         }
     } catch {
         setStatus('Save failed', 'error');
-        showToast('Error saving note');
+        if (!silent) showToast('Error saving note');
     } finally {
         isSaving = false;
     }
@@ -438,9 +460,23 @@ async function downloadPDF() {
 // ── Auto-save every 30 s ─────────────────────────
 setInterval(() => {
     if (!isLoading && !isSaving && currentNoteId && quill.getText().trim().length > 1) {
-        saveNote();
+        saveNote(true);
     }
 }, 30000);
+
+// ── Auto-save on title change (debounced 800 ms) ─
+document.getElementById('noteTitle').addEventListener('input', () => {
+    if (!currentNoteId) return;
+    clearTimeout(autoSaveTimer);
+    autoSaveTimer = setTimeout(() => saveNote(true), 800);
+});
+
+// ── Auto-save on content change (debounced 800 ms)
+quill.on('text-change', () => {
+    if (isLoading || !currentNoteId) return;
+    clearTimeout(autoSaveTimer);
+    autoSaveTimer = setTimeout(() => saveNote(true), 800);
+});
 
 // ── Helpers ──────────────────────────────────────
 function setStatus(text, state) {
