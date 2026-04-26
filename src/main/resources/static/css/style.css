@@ -1280,21 +1280,38 @@ body {
 /* ─── Watermark ──────────────────────────────────── */
 .watermark {
   position: fixed;
-  bottom: 14px;
+  bottom: 16px;
   left: 50%;
   transform: translateX(-50%);
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: .06em;
-  color: var(--t3);
-  opacity: .38;
-  pointer-events: none;
   z-index: 500;
+  pointer-events: none;
   white-space: nowrap;
-  transition: opacity .2s;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+
+  padding: 5px 14px;
+  border-radius: 20px;
+  background: rgba(14,12,30,.55);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(167,139,250,.22);
+  box-shadow: 0 2px 14px rgba(0,0,0,.25);
+
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: .04em;
+  color: var(--t2);
 }
 
-.watermark:hover { opacity: .7; }
+.watermark span {
+  font-weight: 700;
+  background: linear-gradient(135deg, #c4b5fd, #f9a8d4);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
 
 
 /* ═══════════════════════════════════════════════════
