@@ -927,42 +927,135 @@ body {
    RESPONSIVE
    ═══════════════════════════════════════════════════ */
 
-@media (max-width: 800px) {
-  .app-shell { flex-direction: column; }
+html, body { overflow-x: hidden; }
 
-  .sidebar {
-    width: 100%;
-    height: auto;
-    position: relative;
-    flex-direction: row;
-    align-items: center;
-    padding: 12px 16px;
-    gap: 12px;
-    flex-wrap: wrap;
+/* ── Tablet (≤ 1024px) ───────────────────────────── */
+@media (max-width: 1024px) {
+  .notes-panel { width: 240px; }
+
+  .title-zone { padding: 40px 36px 0; }
+  .title-rule { padding: 0 36px; }
+  .ql-toolbar.ql-snow { padding: 10px 36px !important; }
+  .ql-editor {
+    padding: 28px 36px 60px !important;
+    min-height: calc(100vh - 200px);
+  }
+  .ql-editor.ql-blank::before { left: 36px !important; }
+}
+
+/* ── Large mobile / small tablet (≤ 768px) ──────── */
+@media (max-width: 768px) {
+
+  /* Workspace: panel becomes a left-drawer overlay */
+  .workspace { height: 100vh; overflow: hidden; }
+
+  .notes-panel {
+    position: fixed !important;
+    top: 0; left: 0; bottom: 0;
+    width: 280px !important;
+    z-index: 400;
+    transform: translateX(0);
+    opacity: 1;
+    transition: transform .28s cubic-bezier(.4,0,.2,1), opacity .22s ease;
+    box-shadow: 6px 0 40px rgba(0,0,0,.55);
   }
 
-  .sidebar-brand  { padding: 0; border: none; }
-  .sidebar-user   { padding: 0; border: none; flex: 1; }
-  .sidebar-nav    { display: none; }
-  .sidebar-footer { padding: 0; border: none; }
+  .workspace.panel-closed .notes-panel {
+    transform: translateX(-100%);
+    opacity: 0;
+    pointer-events: none;
+  }
 
-  .page-top   { padding: 24px 20px 20px; }
-  .notes-area { padding: 20px 20px 40px; }
+  /* Dark backdrop behind open drawer */
+  .workspace:not(.panel-closed)::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.45);
+    z-index: 399;
+  }
 
-  .title-zone  { padding: 32px 20px 0; }
-  .title-rule  { padding: 0 20px; }
+  /* Editor always fills full width */
+  .editor-panel { width: 100% !important; }
 
-  .ql-editor { padding: 28px 20px 60px; min-height: calc(100vh - 220px); }
-  .ql-toolbar.ql-snow { padding: 10px 20px; }
-  .ql-editor.ql-blank::before { left: 20px; }
+  /* Ghost logo always visible (panel overlays, doesn't push editor) */
+  .ep-ghost-logo { opacity: 1 !important; pointer-events: auto !important; }
 
-  .status-bar { padding: 10px 20px; }
-  .edit-header { padding: 0 16px; }
+  /* Topbar */
+  .ep-topbar { padding: 0 14px; gap: 8px; }
   .chip-name  { display: none; }
 
-  .login-right { padding: 48px 28px; max-width: 100%; }
-  .login-heading { font-size: 28px; }
+  /* Paper */
+  .title-zone { padding: 24px 20px 0; }
+  .title-rule { padding: 0 20px; }
+  .note-title-input { font-size: 26px; letter-spacing: -.4px; }
+  .ql-toolbar.ql-snow { padding: 8px 20px !important; }
+  .ql-editor {
+    padding: 22px 20px 60px !important;
+    font-size: 16px !important;
+    line-height: 1.8 !important;
+    min-height: calc(100vh - 180px) !important;
+  }
+  .ql-editor.ql-blank::before { left: 20px !important; font-size: 16px !important; }
+
+  /* Status bar */
+  .status-bar   { padding: 10px 16px; }
+  .status-hint  { display: none; }
+
+  /* Landing */
+  .landing-name    { font-size: 48px; letter-spacing: -1.5px; }
+  .landing-sub     { font-size: 15px; }
+  .landing-brand   { left: 20px; top: 20px; }
+  .landing-actions { gap: 12px; }
 }
+
+/* ── Mobile (≤ 480px) ────────────────────────────── */
+@media (max-width: 480px) {
+
+  /* Drawer takes full width on small phones */
+  .notes-panel { width: 100vw !important; }
+
+  /* Topbar: icon-only buttons */
+  .ep-topbar { padding: 0 10px; height: 52px; gap: 6px; }
+  .ep-right   { gap: 6px; }
+  .btn-label  { display: none; }
+  .btn.btn-primary, .btn.btn-danger { padding: 8px 10px; }
+
+  /* Paper */
+  .note-title-input { font-size: 21px; }
+  .title-zone { padding: 18px 14px 0; }
+  .title-rule { padding: 0 14px; }
+  .ql-editor  { padding: 16px 14px 50px !important; font-size: 15px !important; }
+  .ql-editor.ql-blank::before { left: 14px !important; font-size: 15px !important; }
+
+  /* Landing */
+  .landing-view    { padding: 32px 16px 70px; }
+  .landing-name    { font-size: 36px; letter-spacing: -1px; }
+  .landing-welcome { font-size: 15px; }
+  .landing-sub     { font-size: 14px; margin-bottom: 28px; }
+  .landing-actions { flex-direction: column; align-items: stretch; padding: 0 4px; gap: 10px; }
+  .landing-btn     { justify-content: center; padding: 13px 20px; font-size: 14px; }
+  .landing-pills   { gap: 7px; }
+  .landing-pill    { font-size: 11px; padding: 4px 10px; }
+
+  /* Guest notepad topbar */
+  .guest-mode-pill { display: none; }
+
+  /* Modal */
+  .modal-card { padding: 28px 20px 22px; }
+  .modal-actions { flex-direction: column; }
+
+  /* Watermark */
+  .watermark { font-size: 10px; padding: 4px 10px; bottom: 10px; }
+}
+
+/* ── Small mobile (≤ 360px) ─────────────────────── */
+@media (max-width: 360px) {
+  .landing-name { font-size: 30px; }
+  .ep-toggle-btn { width: 30px; height: 30px; }
+}
+
+
 
 
 /* ═══════════════════════════════════════════════════
@@ -1371,22 +1464,6 @@ body {
 }
 
 
-/* ── Responsive (mobile: stack vertically) ──────── */
-@media (max-width: 680px) {
-  .workspace { flex-direction: column; height: auto; }
 
-  .notes-panel {
-    width: 100% !important;
-    height: auto;
-    max-height: 50vh;
-    border-right: none;
-    border-bottom: 1px solid var(--b1);
-  }
 
-  .workspace.panel-closed .notes-panel {
-    max-height: 0;
-    opacity: 0;
-  }
 
-  .editor-panel { height: auto; min-height: 50vh; }
-}
