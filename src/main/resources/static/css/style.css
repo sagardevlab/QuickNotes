@@ -626,6 +626,14 @@ body {
 }
 .btn-danger:hover { background: rgba(244,63,94,.2); border-color: rgba(244,63,94,.45); box-shadow: 0 4px 14px rgba(244,63,94,.28); transform: translateY(-1px); }
 
+.btn-summarize {
+  background: rgba(251,191,36,.1);
+  color: #fbbf24;
+  border: 1px solid rgba(251,191,36,.2);
+}
+.btn-summarize:hover { background: rgba(251,191,36,.2); border-color: rgba(251,191,36,.45); box-shadow: 0 4px 14px rgba(251,191,36,.28); transform: translateY(-1px); }
+.btn-summarize:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+
 .btn-sm { padding: 5px 12px; font-size: 12px; }
 
 .btn-icon {
@@ -1019,7 +1027,7 @@ html, body { overflow-x: hidden; }
   .ep-topbar { padding: 0 10px; height: 52px; gap: 6px; }
   .ep-right   { gap: 6px; }
   .btn-label  { display: none; }
-  .btn.btn-primary, .btn.btn-danger { padding: 8px 10px; }
+  .btn.btn-primary, .btn.btn-danger, .btn.btn-summarize { padding: 8px 10px; }
 
   /* Paper */
   .note-title-input { font-size: 21px; }

@@ -1,6 +1,7 @@
 package com.sagardevlab.quicknotes.quick_notes.controller;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -17,12 +18,16 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.sagardevlab.quicknotes.quick_notes.model.Note;
 import com.sagardevlab.quicknotes.quick_notes.service.NoteService;
+import com.sagardevlab.quicknotes.quick_notes.service.SummaryService;
 
 @Controller("/api/v1/")
 public class NoteController {
-    
+
     @Autowired
     private NoteService noteService;
+
+    @Autowired
+    private SummaryService summaryService;
 
     private String getUserId(OAuth2AuthenticationToken auth){
         return auth.getPrincipal().getAttribute("sub");
@@ -83,4 +88,22 @@ public class NoteController {
         return ResponseEntity.noContent().build();
     }
 
+    @PostMapping("/api/notes/{id}/summarize-email")
+    @ResponseBody
+    public ResponseEntity<Map<String, String>> summarizeAndEmail(
+            @PathVariable Long id,
+            OAuth2AuthenticationToken auth) {
+        try {
+            Note note      = noteService.findById(id, getUserId(auth));
+            String email   = auth.getPrincipal().getAttribute("email");
+            String name    = auth.getPrincipal().getAttribute("name");
+            summaryService.summarizeAndEmail(note.getTitle(), note.getContent(), id, email, name);
+            return ResponseEntity.ok(Map.of("message", "Summary sent to " + email));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                    .body(Map.of("error", "Failed to send summary: " + e.getMessage()));
+        }
+    }
+
 }
+

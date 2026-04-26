@@ -148,6 +148,13 @@
                     </svg>
                     <span class="btn-label">PDF</span>
                 </button>
+                <button onclick="summarizeAndEmail()" id="summarizeBtn" class="btn btn-summarize">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                        <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"
+                              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <span class="btn-label">Summarize</span>
+                </button>
                 <div class="user-chip">
                     <img class="chip-avatar"
                          th:src="${#authentication.principal.attributes['picture']}"
@@ -428,6 +435,27 @@ function imageHandler() {
         };
         reader.readAsDataURL(file);
     };
+}
+
+// ── Summarize & Email ────────────────────────────
+async function summarizeAndEmail() {
+    if (!currentNoteId) { showToast('Open a note first'); return; }
+    const btn = document.getElementById('summarizeBtn');
+    btn.disabled = true;
+    showToast('Summarizing… this may take a moment');
+    try {
+        const res  = await fetch('/api/notes/' + currentNoteId + '/summarize-email', { method: 'POST' });
+        const data = await res.json();
+        if (res.ok) {
+            showToast('Summary sent to your email!');
+        } else {
+            showToast(data.error || 'Error sending summary');
+        }
+    } catch {
+        showToast('Error sending summary');
+    } finally {
+        btn.disabled = false;
+    }
 }
 
 // ── PDF download ─────────────────────────────────
