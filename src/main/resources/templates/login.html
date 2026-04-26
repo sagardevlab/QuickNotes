@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sign in – NoteHelper</title>
+    <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
     <link th:href="@{/css/style.css}" rel="stylesheet">
 </head>
 <body>
@@ -15,20 +16,59 @@
 
 <div class="login-page">
 
-    <!-- ── Left showcase panel (visible ≥ 920 px) ── -->
+    <!-- ── Left: Guest notepad (visible ≥ 920 px) ── -->
     <div class="login-left">
-        <p class="login-tagline">
-            Your ideas,<br>
-            <span>beautifully</span><br>
-            kept.
-        </p>
-        <p class="login-tagline-sub">
-            A distraction-free writing space that auto-saves,
-            exports to PDF, and keeps every note private to you.
-        </p>
+
+        <!-- CTA banner -->
+        <div class="guest-cta">
+            <div class="guest-cta-msg">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="flex-shrink:0">
+                    <path d="M12 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V10L12 2Z"
+                          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M12 2V10H20M8 14H16M8 18H13"
+                          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span>Login or signup to save your progress and create multiple notes</span>
+            </div>
+            <a href="/oauth2/authorization/google" class="guest-cta-btn">Sign in free →</a>
+        </div>
+
+        <!-- Paper writing area -->
+        <div class="guest-paper">
+            <div class="guest-title-zone">
+                <input type="text"
+                       id="guestTitle"
+                       class="guest-title-input"
+                       placeholder="Give your note a title…"
+                       autocomplete="off"/>
+            </div>
+            <div class="guest-divider-line"></div>
+            <div id="guest-content">
+                <div id="guest-editor"></div>
+            </div>
+        </div>
+
+        <!-- Bottom bar -->
+        <div class="guest-bottom">
+            <span class="guest-mode-badge">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                    <path d="M12 8v4M12 16h.01" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+                </svg>
+                Guest mode — notes are not saved
+            </span>
+            <button onclick="downloadGuestPDF()" class="btn btn-danger btn-sm">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 16L8 12M12 16L16 12M12 16V4M20 20H4"
+                          stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Download PDF
+            </button>
+        </div>
+
     </div>
 
-    <!-- ── Right form panel ── -->
+    <!-- ── Right: Login form ── -->
     <div class="login-right">
 
         <div class="login-brand">
@@ -50,7 +90,6 @@
         </p>
 
         <a href="/oauth2/authorization/google" class="google-btn">
-            <!-- Google G -->
             <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
                 <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
@@ -88,7 +127,77 @@
 
     </div>
 </div>
+
 <div class="watermark">made by <span>sagardevlab</span></div>
+
+<script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+const guestQuill = new Quill('#guest-editor', {
+    theme: 'snow',
+    placeholder: 'Start writing here… (guest mode — not saved)',
+    modules: {
+        toolbar: {
+            container: [
+                [{ header: [1, 2, 3, false] }],
+                ['bold', 'italic', 'underline', 'strike'],
+                [{ list: 'ordered' }, { list: 'bullet' }],
+                [{ align: [] }],
+                ['image', 'link'],
+                ['clean']
+            ],
+            handlers: { image: guestImageHandler }
+        }
+    }
+});
+
+function guestImageHandler() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.click();
+    input.onchange = () => {
+        const file = input.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = e => {
+            const range = guestQuill.getSelection(true);
+            guestQuill.insertEmbed(range.index, 'image', e.target.result);
+            guestQuill.setSelection(range.index + 1);
+        };
+        reader.readAsDataURL(file);
+    };
+}
+
+async function downloadGuestPDF() {
+    const { jsPDF } = window.jspdf;
+    const element = document.getElementById('guest-content');
+
+    const canvas = await html2canvas(element, {
+        scale: 2, useCORS: true, backgroundColor: '#ffffff'
+    });
+
+    const pdf    = new jsPDF('p', 'mm', 'a4');
+    const margin = 14;
+    const cW     = 210 - margin * 2;
+    const imgH   = (canvas.height * cW) / canvas.width;
+    let   left   = imgH;
+    let   y      = margin;
+
+    pdf.addImage(canvas.toDataURL('image/png'), 'PNG', margin, y, cW, imgH);
+    left -= (297 - margin * 2);
+    while (left > 0) {
+        pdf.addPage();
+        y = margin - (imgH - left);
+        pdf.addImage(canvas.toDataURL('image/png'), 'PNG', margin, y, cW, imgH);
+        left -= (297 - margin * 2);
+    }
+
+    const title = document.getElementById('guestTitle').value.trim() || 'guest-note';
+    pdf.save(title + '.pdf');
+}
+</script>
 
 </body>
 </html>
