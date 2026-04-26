@@ -18,6 +18,8 @@ public class Note {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
+    String userId;
+
     String title;
 
     @Column(columnDefinition="TEXT")

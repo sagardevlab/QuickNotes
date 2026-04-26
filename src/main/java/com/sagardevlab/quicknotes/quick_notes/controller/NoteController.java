@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -23,6 +24,15 @@ public class NoteController {
     @Autowired
     private NoteService noteService;
 
+    private String getUserId(OAuth2AuthenticationToken auth){
+        return auth.getPrincipal().getAttribute("sub");
+    }
+
+    @GetMapping("/login")
+    public String loginPage() {
+        return "login";
+    }
+
     @GetMapping("/")
     public String editorPage(Model model){
         model.addAttribute("note", new Note());
@@ -30,46 +40,46 @@ public class NoteController {
     }
 
     @GetMapping("/notes")
-    public String notesPage(Model model) {
-        model.addAttribute("notes", noteService.findAll());
+    public String notesPage(Model model, OAuth2AuthenticationToken auth) {
+        model.addAttribute("notes", noteService.findAll(getUserId(auth)));
         return "notes";
     }
 
     @GetMapping("/edit/{id}")
-    public String editPage(@PathVariable Long id, Model model) {
-        model.addAttribute("note", noteService.findById(id));
+    public String editPage(@PathVariable Long id, Model model, OAuth2AuthenticationToken auth) {
+        model.addAttribute("note", noteService.findById(id, getUserId(auth)));
         return "index";
     }
 
     @GetMapping("/api/notes")
     @ResponseBody
-    public ResponseEntity<List<Note>> getAllNotes() {
-        return ResponseEntity.ok(noteService.findAll());
+    public ResponseEntity<List<Note>> getAllNotes(OAuth2AuthenticationToken auth) {
+        return ResponseEntity.ok(noteService.findAll(getUserId(auth)));
     }
 
     @GetMapping("/api/notes/{id}")
     @ResponseBody
-    public ResponseEntity<Note> getNote(@PathVariable Long id) {
-        return ResponseEntity.ok(noteService.findById(id));
+    public ResponseEntity<Note> getNote(@PathVariable Long id, OAuth2AuthenticationToken auth) {
+        return ResponseEntity.ok(noteService.findById(id, getUserId(auth)));
     }
 
     @PostMapping("/api/notes")
     @ResponseBody
-    public ResponseEntity<Note> createNote(@RequestBody Note note) {
-        return ResponseEntity.ok(noteService.save(note));
+    public ResponseEntity<Note> createNote(@RequestBody Note note, OAuth2AuthenticationToken auth) {
+        return ResponseEntity.ok(noteService.save(note, getUserId(auth)));
     }
 
     @PutMapping("/api/notes/{id}")
     @ResponseBody
-    public ResponseEntity<Note> updateNote(@PathVariable Long id, @RequestBody Note note) {
+    public ResponseEntity<Note> updateNote(@PathVariable Long id, @RequestBody Note note, OAuth2AuthenticationToken auth) {
         note.setId(id);
-        return ResponseEntity.ok(noteService.save(note));
+        return ResponseEntity.ok(noteService.save(note, getUserId(auth)));
     }
 
     @DeleteMapping("/api/notes/{id}")
     @ResponseBody
-    public ResponseEntity<Void> deleteNote(@PathVariable Long id) {
-        noteService.delete(id);
+    public ResponseEntity<Void> deleteNote(@PathVariable Long id, OAuth2AuthenticationToken auth) {
+        noteService.delete(id, getUserId(auth));
         return ResponseEntity.noContent().build();
     }
 

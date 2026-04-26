@@ -14,20 +14,22 @@ public class NoteService {
     @Autowired
     private NoteRepository noteRepository;
 
-    public List<Note> findAll(){
-        return noteRepository.findAllByOrderByUpdatedAtDesc();
+    public List<Note> findAll(String userId){
+        return noteRepository.findByUserIdOrderByUpdatedAtDesc(userId);
     }
 
-    public Note findById(Long id){
-        return noteRepository.findById(id).orElseThrow(()-> new RuntimeException("Note not found: " + id));
+    public Note findById(Long id, String userId){
+        return noteRepository.findByIdAndUserId(id,userId).orElseThrow(()-> new RuntimeException("Note not found: " + id));
     }
 
-    public Note save(Note note){
+    public Note save(Note note, String userId){
+        note.setUserId(userId);
         return noteRepository.save(note);
     }
 
-    public void delete(Long id){
-        noteRepository.deleteById(id);
+    public void delete(Long id, String userId){
+        Note note = findById(id, userId);
+        noteRepository.delete(note);
     }
 
 }

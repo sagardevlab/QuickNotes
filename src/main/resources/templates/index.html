@@ -9,27 +9,90 @@
 </head>
 <body>
 
-<header class="header">
-    <div class="header-left">
-        <h1><a href="/" style="color:white;text-decoration:none;">NoteHelper</a></h1>
-        <input type="text" id="noteTitle" class="note-title-input" placeholder="Untitled note...">
-    </div>
-    <div class="header-right">
-        <a href="/notes" class="btn btn-secondary">My Notes</a>
-        <button onclick="saveNote()" class="btn btn-primary">Save</button>
-        <button onclick="downloadPDF()" class="btn btn-danger">Download PDF</button>
-    </div>
-</header>
+<div class="aurora-mesh" aria-hidden="true"></div>
 
-<main class="main">
-    <div id="note-content" class="editor-container">
-        <div id="editor"></div>
+<div class="editor-page">
+
+    <!-- ── Top bar ── -->
+    <header class="edit-header">
+        <div class="edit-left">
+            <a href="/" class="logo">
+                <div class="logo-icon">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+                        <path d="M12 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V10L12 2Z"
+                              stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M12 2V10H20M8 14H16M8 18H13"
+                              stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <span class="logo-text">NoteHelper</span>
+            </a>
+        </div>
+        <div class="edit-right">
+            <a href="/notes" class="btn btn-secondary">My Notes</a>
+            <button onclick="saveNote()" class="btn btn-primary">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"
+                          stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M17 21v-8H7v8M7 3v5h8"
+                          stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Save
+            </button>
+            <button onclick="downloadPDF()" class="btn btn-danger">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 16L8 12M12 16L16 12M12 16V4M20 20H4"
+                          stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                PDF
+            </button>
+            <div class="user-chip">
+                <img class="chip-avatar"
+                     th:src="${#authentication.principal.attributes['picture']}"
+                     alt="avatar"/>
+                <span class="chip-name"
+                      th:text="${#authentication.principal.attributes['name']}"></span>
+            </div>
+        </div>
+    </header>
+
+    <!-- ── Warm paper writing surface ── -->
+    <div class="paper">
+
+        <!-- Large title -->
+        <div class="title-zone">
+            <input type="text"
+                   id="noteTitle"
+                   class="note-title-input"
+                   placeholder="Give your note a title…"
+                   autocomplete="off"/>
+        </div>
+
+        <!-- Gradient rule -->
+        <div class="title-rule">
+            <div class="title-rule-line"></div>
+        </div>
+
+        <!-- Quill editor — toolbar is inserted here by Quill -->
+        <div id="note-content">
+            <div id="editor"></div>
+        </div>
+
     </div>
-</main>
 
-<div id="toast" class="toast hidden">Saved!</div>
+    <!-- ── Status bar ── -->
+    <div class="status-bar">
+        <span class="status-left">
+            <span class="status-dot" id="statusDot"></span>
+            <span id="statusText">Ready</span>
+        </span>
+        <span class="status-hint">Auto-saves every 30 s</span>
+    </div>
 
-<!-- Pass the note ID from the server to JavaScript -->
+</div>
+
+<div id="toast" class="toast hidden"></div>
+
 <script th:inline="javascript">
     const NOTE_ID = /*[[${note.id}]]*/ null;
 </script>

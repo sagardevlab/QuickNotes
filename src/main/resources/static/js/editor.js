@@ -1,5 +1,13 @@
 let currentNoteId = NOTE_ID;
 
+function setStatus(text, state) {
+    const dot   = document.getElementById('statusDot');
+    const label = document.getElementById('statusText');
+    if (!dot || !label) return;
+    dot.className = 'status-dot' + (state ? ' ' + state : '');
+    label.textContent = text;
+}
+
 // ── Initialize Quill editor ───────────────────────────────────
 const quill = new Quill('#editor', {
     theme: 'snow',
@@ -28,8 +36,11 @@ if (currentNoteId) {
             if (note.content) {
                 quill.clipboard.dangerouslyPasteHTML(note.content);
             }
+            setStatus('All changes saved', 'saved');
         })
         .catch(() => showToast('Error loading note'));
+} else {
+    setStatus('New note', '');
 }
 
 // ── Image upload handler ──────────────────────────────────────
@@ -61,6 +72,8 @@ async function saveNote() {
     const url    = currentNoteId ? `/api/notes/${currentNoteId}` : '/api/notes';
     const method = currentNoteId ? 'PUT' : 'POST';
 
+    setStatus('Saving…', 'saving');
+
     try {
         const response = await fetch(url, {
             method,
@@ -74,11 +87,14 @@ async function saveNote() {
                 currentNoteId = saved.id;
                 window.history.replaceState({}, '', `/edit/${saved.id}`);
             }
+            setStatus('All changes saved', 'saved');
             showToast('Note saved!');
         } else {
+            setStatus('Save failed', 'error');
             showToast('Error saving note');
         }
     } catch (err) {
+        setStatus('Save failed', 'error');
         showToast('Error saving note');
     }
 }
