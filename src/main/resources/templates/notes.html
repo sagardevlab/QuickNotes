@@ -466,14 +466,17 @@ setInterval(() => {
 
 // ── Auto-save on title change (debounced 800 ms) ─
 document.getElementById('noteTitle').addEventListener('input', () => {
-    if (!currentNoteId) return;
+    const hasTitle = document.getElementById('noteTitle').value.trim().length > 0;
+    if (!hasTitle && !currentNoteId) return;
     clearTimeout(autoSaveTimer);
     autoSaveTimer = setTimeout(() => saveNote(true), 800);
 });
 
 // ── Auto-save on content change (debounced 800 ms)
 quill.on('text-change', () => {
-    if (isLoading || !currentNoteId) return;
+    if (isLoading) return;
+    const hasContent = quill.getText().trim().length > 0;
+    if (!hasContent && !currentNoteId) return;
     clearTimeout(autoSaveTimer);
     autoSaveTimer = setTimeout(() => saveNote(true), 800);
 });
