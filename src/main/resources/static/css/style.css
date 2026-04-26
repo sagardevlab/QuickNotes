@@ -1277,6 +1277,26 @@ body {
   flex-direction: column;
 }
 
+/* ─── Watermark ──────────────────────────────────── */
+.watermark {
+  position: fixed;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .06em;
+  color: var(--t3);
+  opacity: .38;
+  pointer-events: none;
+  z-index: 500;
+  white-space: nowrap;
+  transition: opacity .2s;
+}
+
+.watermark:hover { opacity: .7; }
+
+
 /* ═══════════════════════════════════════════════════
    DELETE CONFIRMATION MODAL
    ═══════════════════════════════════════════════════ */
