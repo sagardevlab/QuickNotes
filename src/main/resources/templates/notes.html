@@ -524,7 +524,10 @@ function renderChat() {
         }
         const preview = msg.content
             ? `<div class="chat-content-preview">${esc(msg.content)}</div>
-               <button class="chat-apply-btn" onclick="applyToNote(${i})">↑ Apply to note</button>`
+               <div class="chat-action-row">
+                   <button class="chat-apply-btn" onclick="applyToNote(${i})">↑ Replace note</button>
+                   <button class="chat-add-btn"   onclick="addToNote(${i})">+ Add to note</button>
+               </div>`
             : '';
         return `<div class="chat-bubble-wrap">
             <div class="chat-bubble chat-ai">${esc(msg.text)}</div>
@@ -585,17 +588,32 @@ function applyToNote(index) {
     const content = chatHistory[index]?.content;
     if (!content) return;
     previousNoteContent = quill.root.innerHTML;
-    const paragraphs = content.split('\n\n').filter(p => p.trim());
-    const html = paragraphs.length > 1
-        ? paragraphs.map(p => `<p>${p.replace(/\n/g, '<br>')}</p>`).join('')
-        : `<p>${content.replace(/\n/g, '<br>')}</p>`;
+    const html = contentToHtml(content);
     quill.clipboard.dangerouslyPasteHTML(html);
     if (currentNoteId) saveNote(true);
-    showUndoBar();
+    showUndoBar('Note replaced');
 }
 
-function showUndoBar() {
+function addToNote(index) {
+    const content = chatHistory[index]?.content;
+    if (!content) return;
+    previousNoteContent = quill.root.innerHTML;
+    const existing = quill.root.innerHTML.replace(/<p><br><\/p>$/, '');
+    quill.clipboard.dangerouslyPasteHTML(existing + '<p><br></p>' + contentToHtml(content));
+    if (currentNoteId) saveNote(true);
+    showUndoBar('Added to note');
+}
+
+function contentToHtml(content) {
+    const paragraphs = content.split('\n\n').filter(p => p.trim());
+    return paragraphs.length > 1
+        ? paragraphs.map(p => `<p>${p.replace(/\n/g, '<br>')}</p>`).join('')
+        : `<p>${content.replace(/\n/g, '<br>')}</p>`;
+}
+
+function showUndoBar(label = 'Note updated') {
     const bar = document.getElementById('undoBar');
+    bar.querySelector('span').textContent = label;
     bar.classList.remove('hidden');
     clearTimeout(undoBarTimer);
     undoBarTimer = setTimeout(() => {
