@@ -210,6 +210,12 @@
     </div>
 </div>
 
+<!-- Undo bar -->
+<div id="undoBar" class="undo-bar hidden">
+    <span>Note updated</span>
+    <button class="undo-btn" onclick="undoApply()">Undo</button>
+</div>
+
 <!-- ── AI Chat floating button ───────────────────── -->
 <button class="ai-fab" onclick="toggleAIChat()" id="aiFab" title="AI Assistant">
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
@@ -478,13 +484,22 @@ function imageHandler() {
 let chatHistory = [];
 let aiChatOpen  = false;
 
+const QUICK_ACTIONS = [
+    { label: '✦ Summarize',          msg: 'Summarize this note in bullet points' },
+    { label: '✦ Make professional',  msg: 'Rewrite this note in a professional tone' },
+    { label: '✦ Fix grammar',        msg: 'Fix grammar and spelling mistakes' },
+    { label: '✦ Expand content',     msg: 'Expand this note with more detail and examples' },
+    { label: '✦ Make shorter',       msg: 'Make this note shorter and more concise' },
+    { label: '✦ Simplify language',  msg: 'Rewrite this in simple, easy-to-understand language' },
+];
+
 function toggleAIChat() {
     aiChatOpen = !aiChatOpen;
     document.getElementById('aiChatPanel').classList.toggle('open', aiChatOpen);
     document.getElementById('aiFab').classList.toggle('active', aiChatOpen);
     if (aiChatOpen) {
         if (chatHistory.length === 0) {
-            pushAI("Hi! I can help with your note. Try: \"make it professional\", \"fix grammar\", \"summarize\", \"make it shorter\", or just ask a question.");
+            pushAI("Hi! What would you like to do with your note?");
         }
         document.getElementById('aiChatInput').focus();
     }
@@ -497,19 +512,31 @@ function pushAI(text, content = null) {
 
 function renderChat() {
     const c = document.getElementById('aiChatMessages');
+    const hasUserMsg = chatHistory.some(m => m.role === 'user');
+    const chips = !hasUserMsg
+        ? `<div class="quick-actions">${QUICK_ACTIONS.map(a =>
+            `<button class="quick-chip" onclick="sendQuickAction(${JSON.stringify(a.msg)})">${a.label}</button>`
+          ).join('')}</div>`
+        : '';
     c.innerHTML = chatHistory.map((msg, i) => {
         if (msg.role === 'user') {
             return `<div class="chat-bubble chat-user">${esc(msg.text)}</div>`;
         }
-        const applyBtn = msg.content
-            ? `<button class="chat-apply-btn" onclick="applyToNote(${i})">↑ Apply to note</button>`
+        const preview = msg.content
+            ? `<div class="chat-content-preview">${esc(msg.content)}</div>
+               <button class="chat-apply-btn" onclick="applyToNote(${i})">↑ Apply to note</button>`
             : '';
         return `<div class="chat-bubble-wrap">
             <div class="chat-bubble chat-ai">${esc(msg.text)}</div>
-            ${applyBtn}
+            ${preview}
         </div>`;
-    }).join('');
+    }).join('') + chips;
     c.scrollTop = c.scrollHeight;
+}
+
+function sendQuickAction(message) {
+    document.getElementById('aiChatInput').value = message;
+    sendAIMessage();
 }
 
 async function sendAIMessage() {
@@ -551,16 +578,40 @@ async function sendAIMessage() {
     }
 }
 
+let previousNoteContent = null;
+let undoBarTimer = null;
+
 function applyToNote(index) {
     const content = chatHistory[index]?.content;
     if (!content) return;
+    previousNoteContent = quill.root.innerHTML;
     const paragraphs = content.split('\n\n').filter(p => p.trim());
     const html = paragraphs.length > 1
         ? paragraphs.map(p => `<p>${p.replace(/\n/g, '<br>')}</p>`).join('')
         : `<p>${content.replace(/\n/g, '<br>')}</p>`;
     quill.clipboard.dangerouslyPasteHTML(html);
     if (currentNoteId) saveNote(true);
-    showToast('Note updated!');
+    showUndoBar();
+}
+
+function showUndoBar() {
+    const bar = document.getElementById('undoBar');
+    bar.classList.remove('hidden');
+    clearTimeout(undoBarTimer);
+    undoBarTimer = setTimeout(() => {
+        bar.classList.add('hidden');
+        previousNoteContent = null;
+    }, 7000);
+}
+
+function undoApply() {
+    if (!previousNoteContent) return;
+    quill.clipboard.dangerouslyPasteHTML(previousNoteContent);
+    if (currentNoteId) saveNote(true);
+    previousNoteContent = null;
+    clearTimeout(undoBarTimer);
+    document.getElementById('undoBar').classList.add('hidden');
+    showToast('Undone!');
 }
 
 document.addEventListener('DOMContentLoaded', () => {
