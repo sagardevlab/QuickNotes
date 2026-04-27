@@ -1,5 +1,6 @@
 package com.sagardevlab.quicknotes.quick_notes.controller;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -17,8 +18,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.sagardevlab.quicknotes.quick_notes.model.Note;
+import com.sagardevlab.quicknotes.quick_notes.service.AIService;
 import com.sagardevlab.quicknotes.quick_notes.service.NoteService;
-import com.sagardevlab.quicknotes.quick_notes.service.SummaryService;
 
 @Controller("/api/v1/")
 public class NoteController {
@@ -27,9 +28,9 @@ public class NoteController {
     private NoteService noteService;
 
     @Autowired
-    private SummaryService summaryService;
+    private AIService aiService;
 
-    private String getUserId(OAuth2AuthenticationToken auth){
+    private String getUserId(OAuth2AuthenticationToken auth) {
         return auth.getPrincipal().getAttribute("sub");
     }
 
@@ -39,7 +40,7 @@ public class NoteController {
     }
 
     @GetMapping("/")
-    public String editorPage(Model model){
+    public String editorPage(Model model) {
         model.addAttribute("note", new Note());
         return "index";
     }
@@ -88,20 +89,23 @@ public class NoteController {
         return ResponseEntity.noContent().build();
     }
 
-    @PostMapping("/api/notes/{id}/summarize")
+    @PostMapping("/api/ai-chat")
     @ResponseBody
-    public ResponseEntity<Map<String, Object>> summarize(
-            @PathVariable Long id,
+    public ResponseEntity<Map<String, Object>> aiChat(
+            @RequestBody Map<String, String> body,
             OAuth2AuthenticationToken auth) {
         try {
-            Note note = noteService.findById(id, getUserId(auth));
-            List<String> bullets = summaryService.summarize(note.getContent());
-            return ResponseEntity.ok(Map.of("title", note.getTitle() != null ? note.getTitle() : "Untitled", "bullets", bullets));
+            String message     = body.getOrDefault("message", "");
+            String noteContent = body.getOrDefault("noteContent", "");
+            AIService.AIResponse result = aiService.chat(noteContent, message);
+            Map<String, Object> response = new HashMap<>();
+            response.put("type", result.type());
+            response.put("reply", result.reply());
+            if (result.content() != null) response.put("content", result.content());
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.internalServerError()
-                    .body(Map.of("error", "Failed to summarize: " + e.getMessage()));
+                    .body(Map.of("error", "AI error: " + e.getMessage()));
         }
     }
-
 }
-

@@ -148,13 +148,6 @@
                     </svg>
                     <span class="btn-label">PDF</span>
                 </button>
-                <button onclick="summarizeAndEmail()" id="summarizeBtn" class="btn btn-summarize">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                        <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"
-                              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                    <span class="btn-label">Summarize</span>
-                </button>
                 <div class="user-chip">
                     <img class="chip-avatar"
                          th:src="${#authentication.principal.attributes['picture']}"
@@ -217,25 +210,48 @@
     </div>
 </div>
 
-<!-- Summary side panel -->
-<div id="summaryPanel" class="summary-panel">
-    <div class="summary-panel-header">
-        <div class="summary-panel-title">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"
-                      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<!-- ── AI Chat floating button ───────────────────── -->
+<button class="ai-fab" onclick="toggleAIChat()" id="aiFab" title="AI Assistant">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+        <path d="M12 2C6.48 2 2 6.48 2 12c0 1.85.5 3.58 1.37 5.07L2 22l4.93-1.37C8.42 21.5 10.15 22 12 22c5.52 0 10-4.48 10-10S17.52 2 12 2z"
+              fill="currentColor" opacity=".18"/>
+        <circle cx="8.5" cy="12" r="1.2" fill="currentColor"/>
+        <circle cx="12" cy="12" r="1.2" fill="currentColor"/>
+        <circle cx="15.5" cy="12" r="1.2" fill="currentColor"/>
+    </svg>
+</button>
+
+<!-- ── AI Chat panel ──────────────────────────────── -->
+<div class="ai-chat-panel" id="aiChatPanel">
+    <div class="ai-chat-header">
+        <div class="ai-chat-title">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                <path d="M12 2C6.48 2 2 6.48 2 12c0 1.85.5 3.58 1.37 5.07L2 22l4.93-1.37C8.42 21.5 10.15 22 12 22c5.52 0 10-4.48 10-10S17.52 2 12 2z"
+                      fill="currentColor" opacity=".4"/>
+                <circle cx="8.5" cy="12" r="1.3" fill="currentColor"/>
+                <circle cx="12" cy="12" r="1.3" fill="currentColor"/>
+                <circle cx="15.5" cy="12" r="1.3" fill="currentColor"/>
             </svg>
-            Quick Summary
+            AI Assistant
         </div>
-        <button class="summary-close-btn" onclick="closeSummaryPanel()" title="Close">
+        <button class="ai-close-btn" onclick="toggleAIChat()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                 <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
             </svg>
         </button>
     </div>
-    <p class="summary-note-title" id="summaryTitle"></p>
-    <ul class="summary-bullets" id="summaryBullets"></ul>
-    <p class="summary-hint">Top key points extracted from your note</p>
+    <div class="ai-chat-messages" id="aiChatMessages"></div>
+    <div class="ai-chat-input-row">
+        <textarea class="ai-chat-input" id="aiChatInput"
+                  placeholder="Ask anything… e.g. make this professional"
+                  rows="1"></textarea>
+        <button class="ai-send-btn" id="aiSendBtn" onclick="sendAIMessage()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                <path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z"
+                      stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </button>
+    </div>
 </div>
 
 <!-- Scripts -->
@@ -458,37 +474,105 @@ function imageHandler() {
     };
 }
 
-// ── Summarize & Email ────────────────────────────
-async function summarizeAndEmail() {
-    if (!currentNoteId) { showToast('Open a note first'); return; }
-    const btn = document.getElementById('summarizeBtn');
-    btn.disabled = true;
-    showToast('Summarizing…');
-    try {
-        const res  = await fetch('/api/notes/' + currentNoteId + '/summarize', { method: 'POST' });
-        const data = await res.json();
-        if (res.ok) {
-            openSummaryPanel(data.title, data.bullets);
-        } else {
-            showToast(data.error || 'Error summarizing note');
+// ── AI Chat ──────────────────────────────────────
+let chatHistory = [];
+let aiChatOpen  = false;
+
+function toggleAIChat() {
+    aiChatOpen = !aiChatOpen;
+    document.getElementById('aiChatPanel').classList.toggle('open', aiChatOpen);
+    document.getElementById('aiFab').classList.toggle('active', aiChatOpen);
+    if (aiChatOpen) {
+        if (chatHistory.length === 0) {
+            pushAI("Hi! I can help with your note. Try: \"make it professional\", \"fix grammar\", \"summarize\", \"make it shorter\", or just ask a question.");
         }
-    } catch {
-        showToast('Error summarizing note');
-    } finally {
-        btn.disabled = false;
+        document.getElementById('aiChatInput').focus();
     }
 }
 
-function openSummaryPanel(title, bullets) {
-    document.getElementById('summaryTitle').textContent = title;
-    const ul = document.getElementById('summaryBullets');
-    ul.innerHTML = bullets.map(b => `<li>${esc(b)}</li>`).join('');
-    document.getElementById('summaryPanel').classList.add('open');
+function pushAI(text, content = null) {
+    chatHistory.push({ role: 'ai', text, content });
+    renderChat();
 }
 
-function closeSummaryPanel() {
-    document.getElementById('summaryPanel').classList.remove('open');
+function renderChat() {
+    const c = document.getElementById('aiChatMessages');
+    c.innerHTML = chatHistory.map((msg, i) => {
+        if (msg.role === 'user') {
+            return `<div class="chat-bubble chat-user">${esc(msg.text)}</div>`;
+        }
+        const applyBtn = msg.content
+            ? `<button class="chat-apply-btn" onclick="applyToNote(${i})">↑ Apply to note</button>`
+            : '';
+        return `<div class="chat-bubble-wrap">
+            <div class="chat-bubble chat-ai">${esc(msg.text)}</div>
+            ${applyBtn}
+        </div>`;
+    }).join('');
+    c.scrollTop = c.scrollHeight;
 }
+
+async function sendAIMessage() {
+    const input = document.getElementById('aiChatInput');
+    const message = input.value.trim();
+    if (!message) return;
+
+    input.value = '';
+    input.style.height = 'auto';
+    chatHistory.push({ role: 'user', text: message });
+    renderChat();
+
+    const c = document.getElementById('aiChatMessages');
+    const tid = 'typing-' + Date.now();
+    c.insertAdjacentHTML('beforeend',
+        `<div id="${tid}" class="chat-bubble chat-ai chat-typing"><span></span><span></span><span></span></div>`);
+    c.scrollTop = c.scrollHeight;
+
+    document.getElementById('aiSendBtn').disabled = true;
+    try {
+        const noteContent = quill.root.innerHTML;
+        const res  = await fetch('/api/ai-chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message, noteContent })
+        });
+        const data = await res.json();
+        document.getElementById(tid)?.remove();
+        if (res.ok) {
+            pushAI(data.reply, data.content || null);
+        } else {
+            pushAI(data.error || 'Something went wrong. Please try again.');
+        }
+    } catch {
+        document.getElementById(tid)?.remove();
+        pushAI('Connection error. Please try again.');
+    } finally {
+        document.getElementById('aiSendBtn').disabled = false;
+    }
+}
+
+function applyToNote(index) {
+    const content = chatHistory[index]?.content;
+    if (!content) return;
+    const paragraphs = content.split('\n\n').filter(p => p.trim());
+    const html = paragraphs.length > 1
+        ? paragraphs.map(p => `<p>${p.replace(/\n/g, '<br>')}</p>`).join('')
+        : `<p>${content.replace(/\n/g, '<br>')}</p>`;
+    quill.clipboard.dangerouslyPasteHTML(html);
+    if (currentNoteId) saveNote(true);
+    showToast('Note updated!');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const input = document.getElementById('aiChatInput');
+    input.addEventListener('keydown', e => {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendAIMessage(); }
+    });
+    input.addEventListener('input', () => {
+        input.style.height = 'auto';
+        input.style.height = Math.min(input.scrollHeight, 90) + 'px';
+    });
+});
 
 // ── PDF download ─────────────────────────────────
 async function downloadPDF() {
